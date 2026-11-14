@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#5b5bd6">
+<title>TaskRing — To-do, Calendar &amp; Alarms</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="wrap">
+    <div class="brand"><span class="logo" aria-hidden="true">◷</span> TaskRing</div>
+    <div class="today" id="todayLabel"></div>
+  </div>
+</header>
+
+<nav class="tabbar" aria-label="Sections">
+  <button class="tab active" data-view="tasks" aria-current="page">✓ Tasks</button>
+  <button class="tab" data-view="calendar">▦ Calendar</button>
+  <button class="tab" data-view="alarms">⏰ Alarms</button>
+</nav>
+
+<main>
+  <!-- TASKS -->
+  <section id="view-tasks" class="view active" aria-label="Tasks">
+    <div class="panel">
+      <h1>To-do list</h1>
+      <div class="progress"><div class="progress-bar" id="taskProgress"></div></div>
+      <p class="muted" id="taskSummary"></p>
+      <form id="taskForm" class="add-row">
+        <input id="taskText" type="text" placeholder="Add a task…" autocomplete="off" required>
+        <select id="taskPriority" aria-label="Priority">
+          <option value="low">Low</option>
+          <option value="med" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+        <input id="taskDue" type="datetime-local" aria-label="Due date">
+        <label class="check speak"><input type="checkbox" id="taskSpeak" checked> Speak 5 min before</label>
+        <button class="btn primary" type="submit">Add</button>
+      </form>
+      <div class="filters" id="taskFilters">
+        <button data-filter="all" class="chip active">All</button>
+        <button data-filter="active" class="chip">Active</button>
+        <button data-filter="done" class="chip">Done</button>
+        <button class="chip ghost" id="clearDone" type="button">Clear done</button>
+      </div>
+      <ul class="list" id="taskList"></ul>
+      <p class="empty muted" id="taskEmpty">No tasks yet. Add one above.</p>
+    </div>
+  </section>
+
+  <!-- CALENDAR -->
+  <section id="view-calendar" class="view" aria-label="Calendar">
+    <div class="panel">
+      <h1>Calendar</h1>
+      <div class="cal-head">
+        <button class="btn" id="calPrev" aria-label="Previous day">‹</button>
+        <button class="btn" id="calToday">Today</button>
+        <button class="btn" id="calNext" aria-label="Next day">›</button>
+      </div>
+      <p class="cal-title" id="calTitle"></p>
+      <div class="cal-nav">
+        <button class="chip" id="calPrevMonth">‹ Prev month</button>
+        <button class="chip" id="calNextMonth">Next month ›</button>
+      </div>
+      <div class="month" id="monthGrid"></div>
+      <p class="legend muted"><i class="dot t"></i> task · <i class="dot a"></i> alarm · <i class="dot m"></i> meeting</p>
+      <ul class="list" id="calList"></ul>
+      <p class="empty muted" id="calEmpty">Nothing scheduled this day.</p>
+    </div>
+  </section>
+
+  <!-- ALARMS -->
+  <section id="view-alarms" class="view" aria-label="Alarms">
+    <div class="panel">
+      <h1>Alarms</h1>
+      <p class="muted">Alarms ring and speak while this app is open. On mobile, keep the tab active. Meeting alarms are marked 📅.</p>
+      <form id="alarmForm" class="add-row">
+        <input id="alarmLabel" type="text" placeholder="Label (e.g., Team standup)" autocomplete="off">
+        <input id="alarmTime" type="datetime-local" required>
+        <select id="alarmType" aria-label="Alarm type">
+          <option value="general">General</option>
+          <option value="meeting">Meeting</option>
+        </select>
+        <label class="check speak"><input type="checkbox" id="alarmRepeat"> Daily</label>
+        <button class="btn primary" type="submit">Set alarm</button>
+      </form>
+      <ul class="list" id="alarmList"></ul>
+      <p class="empty muted" id="alarmEmpty">No alarms yet. Set one above.</p>
+    </div>
+  </section>
+</main>
+
+<div id="alarmBanner" class="banner" hidden>
+  <div class="banner-text">
+    <strong>⏰ Alarm</strong>
+    <span id="bannerLabel"></span>
+  </div>
+  <div class="banner-actions">
+    <button id="snoozeBtn" class="btn">Snooze 5m</button>
+    <button id="dismissBtn" class="btn primary">Dismiss</button>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="app.js"></script>
+<script>
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.register('sw.js').catch(function(){});
+}
+</script>
+</body>
+</html>
