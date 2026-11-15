@@ -151,23 +151,34 @@ function fireAlarm(a){
 }
 function stopAlarmUI(){ $('#alarmBanner').hidden = true; stopSound(); stopFlash(); currentAlarm = null; }
 
+let alarmBus = null, noiseBuf = null;
+function getNoise(){
+  if (!noiseBuf){ const len = audioCtx.sampleRate; noiseBuf = audioCtx.createBuffer(1, len, audioCtx.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random()*2-1; }
+  return noiseBuf;
+}
+function kick(t){ const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(160,t); o.frequency.exponentialRampToValueAtTime(45, t+0.12); g.gain.setValueAtTime(0.9,t); g.gain.exponentialRampToValueAtTime(0.001, t+0.18); o.connect(g); g.connect(alarmBus); o.start(t); o.stop(t+0.2); }
+function snare(t){ const s = audioCtx.createBufferSource(); s.buffer = getNoise(); const f = audioCtx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1800; f.Q.value=0.8; const g = audioCtx.createGain(); g.gain.setValueAtTime(0.5,t); g.gain.exponentialRampToValueAtTime(0.001, t+0.14); s.connect(f); f.connect(g); g.connect(alarmBus); s.start(t); s.stop(t+0.15); }
+function hat(t, open, vol){ const s = audioCtx.createBufferSource(); s.buffer = getNoise(); const f = audioCtx.createBiquadFilter(); f.type='highpass'; f.frequency.value=7000; const g = audioCtx.createGain(); const dur = open ? 0.18 : 0.045; g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.001, t+dur); s.connect(f); f.connect(g); g.connect(alarmBus); s.start(t); s.stop(t+dur+0.02); }
 function startSound(){
   ensureAudio(); if (!audioCtx) return;
   stopSound();
-  alarmOsc = audioCtx.createOscillator();
-  alarmGain = audioCtx.createGain();
-  alarmGain.gain.value = 0.0001;
-  alarmOsc.connect(alarmGain).connect(audioCtx.destination);
-  alarmOsc.frequency.value = 880;
-  alarmOsc.start();
-  alarmGain.gain.exponentialRampToValueAtTime(0.15, audioCtx.currentTime + 0.05);
-  let hi = true;
-  alarmTimer = setInterval(() => { hi = !hi; if (alarmOsc) alarmOsc.frequency.setValueAtTime(hi ? 880 : 660, audioCtx.currentTime); }, 400);
+  alarmBus = audioCtx.createGain(); alarmBus.gain.value = 0.9; alarmBus.connect(audioCtx.destination);
+  const stepDur = 60/140/4; let step = 0;
+  const scheduleStep = () => {
+    const t = audioCtx.currentTime + 0.06; const i = step % 16;
+    if (i % 4 === 0) kick(t);
+    if (i === 4 || i === 12) snare(t);
+    if (i % 2 === 0) hat(t, i === 14, i % 4 === 0 ? 0.16 : 0.09);
+    step++;
+  };
+  scheduleStep();
+  alarmTimer = setInterval(scheduleStep, stepDur * 1000);
 }
 function stopSound(){
   if (alarmTimer){ clearInterval(alarmTimer); alarmTimer = null; }
   if (alarmOsc){ try { alarmOsc.stop(); } catch {} alarmOsc = null; }
-  if (alarmGain){ alarmGain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.05); alarmGain = null; }
+  if (alarmGain){ try { alarmGain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.05); } catch {} alarmGain = null; }
+  if (alarmBus){ const b = alarmBus; try { b.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.03); setTimeout(() => { try { b.disconnect(); } catch {} }, 400); } catch {} alarmBus = null; }
 }
 function startFlash(){
   const orig = document.title; let on = true;

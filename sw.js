@@ -1,4 +1,4 @@
-const CACHE = 'taskring-v1';
+const CACHE = 'taskring-v2';
 const ASSETS = ['./', './index.html', './styles.css', './app.js', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
